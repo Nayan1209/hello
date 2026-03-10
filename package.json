@@ -1,0 +1,16 @@
+{
+  "name": "samajh-match",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Starter monorepo structure for a Samajh matchmaking app",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "echo 'TODO: start apps/web dev server'",
+    "dev:api": "echo 'TODO: start apps/api dev server'",
+    "lint": "echo 'TODO: add linter'",
+    "test": "echo 'TODO: add tests'"
+  }
+}
