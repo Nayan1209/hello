@@ -55,4 +55,4 @@ npm run test
 - `POST /safety/report`
 - `GET /admin/reports`
 
-For Android/Play Store publishing steps, read `docs/PLAYSTORE_PUBLISHING.md`.
+For complete cloud setup, API testing, deployment, and Play Store steps, read `docs/COMPLETE_SETUP_AND_LAUNCH_GUIDE.md` and `docs/PLAYSTORE_PUBLISHING.md`.
