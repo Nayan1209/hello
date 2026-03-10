@@ -1,18 +1,19 @@
-# Architecture (Draft)
+# Architecture
 
-## High-level
+## Current starter implementation
 
-- `apps/web`: UI for onboarding, swiping, matching, and chat.
-- `apps/api`: business logic, auth integration, recommendation/match logic.
-- `packages/ui`: reusable components and theme.
-- `packages/config`: shared developer tooling configuration.
+- `apps/api`: runnable Node HTTP API with modular route files.
+- `apps/web`: frontend placeholder package.
+- `packages/*`: reserved for shared UI/config as the project grows.
 
-## Data domains
+## API modules
 
-- Users
-- Profiles
-- Preferences
-- Swipes
-- Matches
-- Messages
-- Reports/Moderation
+- `auth`: register and login stubs.
+- `profile`: create/get user profiles.
+- `match`: candidate listing and swipe-to-match flow.
+- `chat`: chat restricted to matched users.
+
+## Data storage
+
+Current implementation uses in-memory storage in `apps/api/src/store.js`.
+Next step is migrating to PostgreSQL + Prisma.

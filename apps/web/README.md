@@ -1,8 +1,5 @@
-# apps/web
+# @samajh/web
 
-Frontend application placeholder.
+Frontend app placeholder.
 
-Suggested stack:
-- Next.js (App Router)
-- TypeScript
-- Tailwind CSS
+Next step: scaffold with Next.js and connect to `apps/api` endpoints.

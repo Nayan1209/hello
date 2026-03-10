@@ -1,8 +1,20 @@
-# apps/api
+# @samajh/api
 
-Backend API placeholder.
+Node.js HTTP API starter with modular routes:
 
-Suggested stack:
-- Node.js + Fastify (or NestJS)
-- TypeScript
-- Prisma + PostgreSQL
+- `auth`
+- `profile`
+- `match`
+- `chat`
+
+## Run
+
+```bash
+npm run start:api
+```
+
+## Test
+
+```bash
+npm run test
+```

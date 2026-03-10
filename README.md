@@ -1,48 +1,55 @@
-# Samajh Match
+# Samajh Match App (Starter)
 
-A clean starter structure for a community-focused matchmaking app (Tinder-style flow with culture-first constraints).
+This repository now includes a runnable backend starter for a community matchmaking app, with separate modules for:
 
-## Repository Structure
+- Auth
+- Profile
+- Match
+- Chat
+
+## Project Structure
 
 ```text
 apps/
-  web/        # Frontend app (React/Next/Vite)
-  api/        # Backend API service
+  api/
+    src/
+      modules/
+        auth/
+        profile/
+        match/
+        chat/
+  web/
+docs/
 packages/
-  ui/         # Shared UI components
-  config/     # Shared lint/ts/build configs
-docs/         # Product and technical documentation
-infra/        # Deployment and infrastructure configs
-scripts/      # Local automation scripts
-.github/
-  workflows/  # CI workflows
 ```
 
-## Quick Start
+## Run the app
 
-1. Install Node.js 20+.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run development placeholders:
-   ```bash
-   npm run dev:web
-   npm run dev:api
-   ```
+```bash
+npm install
+npm run start:api
+```
 
-## Initial Product Modules
+API starts on `http://localhost:4000`.
 
-- Authentication and profile verification
-- Community preferences and filters
-- Swipe/match engine
-- Chat and safety reporting
-- Admin moderation dashboard
+## Useful commands
 
-## Next Steps
+```bash
+npm run dev:api
+npm run test
+```
 
-- Pick frontend stack (Next.js recommended)
-- Pick backend stack (Node + Fastify/Nest)
-- Add DB (PostgreSQL + Prisma)
-- Add auth (Clerk/Auth.js/Firebase)
-- Add CI, testing, and deployment pipeline
+## Current API
+
+- `GET /health`
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /profile`
+- `GET /profile/:userId`
+- `GET /match/candidates/:userId`
+- `POST /match/swipe`
+- `GET /match/list/:userId`
+- `POST /chat/send`
+- `GET /chat/thread?userA=...&userB=...`
+
+See roadmap for next milestones.

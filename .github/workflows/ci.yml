@@ -6,9 +6,12 @@ on:
     branches: ["**"]
 
 jobs:
-  placeholder:
+  test-api:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Placeholder
-        run: echo "Add lint/test commands once apps are scaffolded"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run test
