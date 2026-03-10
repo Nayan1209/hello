@@ -1,1 +1,12 @@
-{ "name": "api", "version": "1.0.0", "type": "module", "scripts": { "test": "node --test test/**/*.js", "start": "node src/app.js" }, "dependencies": {}, "devDependencies": {} }
+{
+  "name": "@samajh/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test"
+  }
+}

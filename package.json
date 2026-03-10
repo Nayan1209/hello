@@ -1,0 +1,16 @@
+{
+  "name": "samajh-match",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Starter monorepo for a Samajh matchmaking app",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace @samajh/api",
+    "dev:web": "npm run dev --workspace @samajh/web",
+    "start:api": "npm run start --workspace @samajh/api",
+    "test": "npm run test --workspace @samajh/api"
+  }
+}
