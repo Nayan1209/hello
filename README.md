@@ -1,55 +1,58 @@
-# Samajh Match App (Starter)
+# Samajh Match App (MVP Backend + Mobile Plan)
 
-This repository now includes a runnable backend starter for a community matchmaking app, with separate modules for:
+This repository contains a runnable backend MVP for a matchmaking app and a mobile app starter plan.
 
-- Auth
-- Profile
-- Match
-- Chat
+## What is implemented now
 
-## Project Structure
+- Auth with token sessions (`register`, `login`, `me`)
+- Profile management
+- Candidate discovery with filters
+- Swipe-based matching
+- Matched-user chat
+- Safety tools (`block`, `report`)
+- Admin moderation endpoint (`/admin/reports`)
+
+## Project structure
 
 ```text
 apps/
-  api/
-    src/
-      modules/
-        auth/
-        profile/
-        match/
-        chat/
-  web/
+  api/      # Runnable Node API
+  web/      # Web placeholder
+  mobile/   # Mobile publishing guide + starter notes
 docs/
-packages/
+  PLAYSTORE_PUBLISHING.md
 ```
 
-## Run the app
+## Run backend
 
 ```bash
 npm install
 npm run start:api
 ```
 
-API starts on `http://localhost:4000`.
+API default URL: `http://localhost:4000`
 
-## Useful commands
+## Test backend
 
 ```bash
-npm run dev:api
 npm run test
 ```
 
-## Current API
+## Key endpoints
 
 - `GET /health`
 - `POST /auth/register`
 - `POST /auth/login`
+- `GET /auth/me`
 - `POST /profile`
 - `GET /profile/:userId`
-- `GET /match/candidates/:userId`
+- `GET /match/candidates?location=&minAge=&maxAge=`
 - `POST /match/swipe`
-- `GET /match/list/:userId`
+- `GET /match/list`
 - `POST /chat/send`
-- `GET /chat/thread?userA=...&userB=...`
+- `GET /chat/thread?withUserId=`
+- `POST /safety/block`
+- `POST /safety/report`
+- `GET /admin/reports`
 
-See roadmap for next milestones.
+For Android/Play Store publishing steps, read `docs/PLAYSTORE_PUBLISHING.md`.

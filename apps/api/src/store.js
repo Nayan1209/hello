@@ -3,5 +3,8 @@ export const store = {
   profiles: [],
   swipes: [],
   matches: [],
-  messages: []
+  messages: [],
+  sessions: [],
+  blocks: [],
+  reports: []
 };

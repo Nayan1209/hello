@@ -1,19 +1,21 @@
-export function registerProfileRoutes({ addRoute, store, json }) {
+export function registerProfileRoutes({ addRoute, store, json, requireUser }) {
   addRoute('POST', '/profile', async (req, res) => {
-    const { userId, age, bio, location, interests = [] } = await json(req);
-    if (!userId || !age || !bio) return res(400, { error: 'userId, age and bio are required' });
+    const user = requireUser(req, res);
+    if (!user) return;
 
-    const profile = { userId, age, bio, location: location ?? '', interests };
-    const i = store.profiles.findIndex((p) => p.userId === userId);
-    if (i >= 0) store.profiles[i] = profile;
+    const { age, bio, location, interests = [], community } = await json(req);
+    if (!age || !bio) return res(400, { error: 'age and bio are required' });
+
+    const profile = { userId: user.id, age, bio, location: location ?? '', interests, community: community ?? '' };
+    const index = store.profiles.findIndex((entry) => entry.userId === user.id);
+    if (index >= 0) store.profiles[index] = profile;
     else store.profiles.push(profile);
 
     return res(201, { profile });
   });
 
   addRoute('GET', /^\/profile\/([^/]+)$/, async (_req, res, match) => {
-    const userId = match[1];
-    const profile = store.profiles.find((p) => p.userId === userId);
+    const profile = store.profiles.find((entry) => entry.userId === match[1]);
     if (!profile) return res(404, { error: 'profile not found' });
     return res(200, { profile });
   });

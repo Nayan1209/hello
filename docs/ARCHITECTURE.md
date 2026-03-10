@@ -1,19 +1,24 @@
 # Architecture
 
-## Current starter implementation
+## Backend (`apps/api`)
 
-- `apps/api`: runnable Node HTTP API with modular route files.
-- `apps/web`: frontend placeholder package.
-- `packages/*`: reserved for shared UI/config as the project grows.
+- Plain Node HTTP server with modular route registration.
+- Shared in-memory store for MVP behavior and testing.
+- Modules:
+  - `auth`: registration/login/session lookup
+  - `profile`: profile write/read
+  - `match`: candidate filtering and swipe/match logic
+  - `chat`: conversation for matched users
+  - `safety`: block/report/admin moderation
 
-## API modules
+## Auth model
 
-- `auth`: register and login stubs.
-- `profile`: create/get user profiles.
-- `match`: candidate listing and swipe-to-match flow.
-- `chat`: chat restricted to matched users.
+- Login returns a bearer token.
+- Protected endpoints require `Authorization: Bearer <token>`.
+- Admin-only endpoint: `GET /admin/reports`.
 
-## Data storage
+## Future direction
 
-Current implementation uses in-memory storage in `apps/api/src/store.js`.
-Next step is migrating to PostgreSQL + Prisma.
+- Replace in-memory store with PostgreSQL + Prisma.
+- Add worker queues for notifications and moderation tasks.
+- Add mobile client integration.

@@ -2,36 +2,65 @@ function matchKey(a, b) {
   return [a, b].sort().join('::');
 }
 
-export function registerMatchRoutes({ addRoute, store, json }) {
-  addRoute('GET', /^\/match\/candidates\/([^/]+)$/, async (_req, res, match) => {
-    const userId = match[1];
-    const candidates = store.profiles.filter((p) => p.userId !== userId);
+function isBlocked(store, a, b) {
+  return store.blocks.some((entry) => (entry.byUserId === a && entry.targetUserId === b) || (entry.byUserId === b && entry.targetUserId === a));
+}
+
+export function registerMatchRoutes({ addRoute, store, json, requireUser }) {
+  addRoute('GET', '/match/candidates', async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    const url = new URL(req.url, 'http://localhost');
+    const minAge = Number(url.searchParams.get('minAge') || 18);
+    const maxAge = Number(url.searchParams.get('maxAge') || 100);
+    const location = url.searchParams.get('location') || '';
+
+    const passedIds = new Set(
+      store.swipes.filter((entry) => entry.fromUserId === user.id && entry.action === 'pass').map((entry) => entry.toUserId)
+    );
+
+    const candidates = store.profiles.filter((profile) => {
+      if (profile.userId === user.id) return false;
+      if (profile.age < minAge || profile.age > maxAge) return false;
+      if (location && profile.location !== location) return false;
+      if (passedIds.has(profile.userId)) return false;
+      if (isBlocked(store, user.id, profile.userId)) return false;
+      return true;
+    });
+
     return res(200, { candidates });
   });
 
   addRoute('POST', '/match/swipe', async (req, res) => {
-    const { fromUserId, toUserId, action } = await json(req);
-    if (!fromUserId || !toUserId || !['like', 'pass'].includes(action)) {
-      return res(400, { error: 'fromUserId, toUserId, action(like|pass) are required' });
-    }
+    const user = requireUser(req, res);
+    if (!user) return;
 
-    store.swipes.push({ fromUserId, toUserId, action, at: new Date().toISOString() });
+    const { toUserId, action } = await json(req);
+    if (!toUserId || !['like', 'pass'].includes(action)) {
+      return res(400, { error: 'toUserId and action(like|pass) are required' });
+    }
+    if (isBlocked(store, user.id, toUserId)) return res(403, { error: 'interaction blocked' });
+
+    store.swipes.push({ fromUserId: user.id, toUserId, action, at: new Date().toISOString() });
     if (action === 'like') {
-      const reciprocal = store.swipes.find((s) => s.fromUserId === toUserId && s.toUserId === fromUserId && s.action === 'like');
+      const reciprocal = store.swipes.find((entry) => entry.fromUserId === toUserId && entry.toUserId === user.id && entry.action === 'like');
       if (reciprocal) {
-        const key = matchKey(fromUserId, toUserId);
-        if (!store.matches.find((m) => m.key === key)) {
-          store.matches.push({ key, users: [fromUserId, toUserId], createdAt: new Date().toISOString() });
+        const key = matchKey(user.id, toUserId);
+        if (!store.matches.find((entry) => entry.key === key)) {
+          store.matches.push({ key, users: [user.id, toUserId], createdAt: new Date().toISOString() });
         }
       }
     }
 
-    const isMatch = !!store.matches.find((m) => m.key === matchKey(fromUserId, toUserId));
-    return res(201, { isMatch });
+    const isMatchNow = !!store.matches.find((entry) => entry.key === matchKey(user.id, toUserId));
+    return res(201, { isMatch: isMatchNow });
   });
 
-  addRoute('GET', /^\/match\/list\/([^/]+)$/, async (_req, res, match) => {
-    const userId = match[1];
-    return res(200, { matches: store.matches.filter((m) => m.users.includes(userId)) });
+  addRoute('GET', '/match/list', async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+
+    return res(200, { matches: store.matches.filter((entry) => entry.users.includes(user.id)) });
   });
 }

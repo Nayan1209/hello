@@ -1,11 +1,14 @@
 # @samajh/api
 
-Node.js HTTP API starter with modular routes:
+Runnable Node.js API for Samajh Match MVP.
 
-- `auth`
-- `profile`
-- `match`
-- `chat`
+## Modules
+
+- Auth
+- Profile
+- Match
+- Chat
+- Safety + Admin moderation
 
 ## Run
 
@@ -17,4 +20,12 @@ npm run start:api
 
 ```bash
 npm run test
+```
+
+## Auth usage
+
+Use bearer token from `POST /auth/login`:
+
+```http
+Authorization: Bearer <token>
 ```
