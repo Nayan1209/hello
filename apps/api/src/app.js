@@ -1,123 +1,102 @@
-import { createServer as createHttpServer } from 'node:http';
+import http from 'node:http';
+import { store } from './store.js';
+import { registerAuthRoutes } from './modules/auth/routes.js';
+import { registerProfileRoutes } from './modules/profile/routes.js';
+import { registerMatchRoutes } from './modules/match/routes.js';
+import { registerChatRoutes } from './modules/chat/routes.js';
+import { registerSafetyRoutes } from './modules/safety/routes.js';
 
-// In-memory data storage
-const users = new Map();
-const profiles = new Map();
-const swipes = new Map();
-const messages = new Map();
-let userIdCounter = 1;
-let messageIdCounter = 1;
+function createJsonReader(req) {
+  return new Promise((resolve) => {
+    let data = '';
+    req.on('data', (chunk) => {
+      data += chunk;
+    });
+    req.on('end', () => {
+      if (!data) return resolve({});
+      try {
+        return resolve(JSON.parse(data));
+      } catch {
+        return resolve({});
+      }
+    });
+  });
+}
+
+function getUserFromAuth(req, currentStore) {
+  const header = req.headers.authorization || '';
+  if (!header.startsWith('Bearer ')) return null;
+
+  const token = header.slice('Bearer '.length);
+  const session = currentStore.sessions.find((entry) => entry.token === token);
+  if (!session) return null;
+
+  return currentStore.users.find((user) => user.id === session.userId) || null;
+}
 
 export function createServer() {
-  return createHttpServer(async (req, res) => {
-    // Helper to set JSON response
-    const sendJson = (status, data) => {
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(data));
-    };
+  const routes = [];
 
-    // Helper to read request body
-    const readBody = () => {
-      return new Promise((resolve) => {
-        let body = '';
-        req.on('data', (chunk) => {
-          body += chunk;
-        });
-        req.on('end', () => {
-          try {
-            resolve(body ? JSON.parse(body) : {});
-          } catch {
-            resolve({});
-          }
-        });
-      });
-    };
+  const addRoute = (method, pathMatcher, handler) => {
+    routes.push({ method, pathMatcher, handler });
+  };
 
-    // Parse URL and method
-    const [pathname, search] = req.url.split('?');
+  const ctx = {
+    store,
+    addRoute,
+    json: createJsonReader,
+    requireUser(req, send) {
+      const user = getUserFromAuth(req, store);
+      if (!user) {
+        send(401, { error: 'unauthorized' });
+        return null;
+      }
+      return user;
+    },
+    requireAdmin(req, send) {
+      const user = getUserFromAuth(req, store);
+      if (!user) {
+        send(401, { error: 'unauthorized' });
+        return null;
+      }
+      if (user.role !== 'admin') {
+        send(403, { error: 'admin only' });
+        return null;
+      }
+      return user;
+    }
+  };
+
+  addRoute('GET', '/health', async (_req, res) => res(200, { ok: true }));
+  registerAuthRoutes(ctx);
+  registerProfileRoutes(ctx);
+  registerMatchRoutes(ctx);
+  registerChatRoutes(ctx);
+  registerSafetyRoutes(ctx);
+
+  return http.createServer(async (req, response) => {
+    const url = new URL(req.url, 'http://localhost');
+    const path = url.pathname;
     const method = req.method;
 
-    // Health endpoint
-    if (pathname === '/health' && method === 'GET') {
-      return sendJson(200, { ok: true });
-    }
+    const send = (status, body) => {
+      response.writeHead(status, { 'content-type': 'application/json' });
+      response.end(JSON.stringify(body));
+    };
 
-    // Register endpoint
-    if (pathname === '/auth/register' && method === 'POST') {
-      const data = await readBody();
-      const userId = String(userIdCounter++);
-      users.set(userId, {
-        id: userId,
-        name: data.name,
-        phone: data.phone
-      });
-      return sendJson(200, { user: users.get(userId) });
-    }
+    for (const route of routes) {
+      if (route.method !== method) continue;
 
-    // Profile endpoint
-    if (pathname === '/profile' && method === 'POST') {
-      const data = await readBody();
-      profiles.set(data.userId, {
-        userId: data.userId,
-        age: data.age,
-        bio: data.bio,
-        location: data.location
-      });
-      return sendJson(200, { success: true });
-    }
-
-    // Match swipe endpoint
-    if (pathname === '/match/swipe' && method === 'POST') {
-      const data = await readBody();
-      const swipeKey = `${data.fromUserId}->${data.toUserId}`;
-      swipes.set(swipeKey, {
-        fromUserId: data.fromUserId,
-        toUserId: data.toUserId,
-        action: data.action
-      });
-
-      // Check if it's a mutual match
-      const reverseSwipeKey = `${data.toUserId}->${data.fromUserId}`;
-      const reverseSwipe = swipes.get(reverseSwipeKey);
-      const isMatch = reverseSwipe && reverseSwipe.action === 'like' && data.action === 'like';
-
-      return sendJson(200, { isMatch });
-    }
-
-    // Chat send endpoint
-    if (pathname === '/chat/send' && method === 'POST') {
-      const data = await readBody();
-      const messageId = String(messageIdCounter++);
-      const threadKey = [data.fromUserId, data.toUserId].sort().join('-');
-      
-      if (!messages.has(threadKey)) {
-        messages.set(threadKey, []);
+      if (typeof route.pathMatcher === 'string' && route.pathMatcher === path) {
+        return route.handler(req, send);
       }
 
-      const message = {
-        id: messageId,
-        fromUserId: data.fromUserId,
-        toUserId: data.toUserId,
-        text: data.text,
-        timestamp: new Date().toISOString()
-      };
-
-      messages.get(threadKey).push(message);
-      return sendJson(201, message);
+      if (route.pathMatcher instanceof RegExp) {
+        const match = path.match(route.pathMatcher);
+        if (match) return route.handler(req, send, match);
+      }
     }
 
-    // Chat thread endpoint
-    if (pathname.startsWith('/chat/thread') && method === 'GET') {
-      const params = new URLSearchParams(search);
-      const userA = params.get('userA');
-      const userB = params.get('userB');
-      const threadKey = [userA, userB].sort().join('-');
-      
-      const threadMessages = messages.get(threadKey) || [];
-      return sendJson(200, { messages: threadMessages });
-    }
-
-    // 404
-    sendJson(404, { error: 'Not found' });
+    return send(404, { error: 'not found' });
   });
 }
